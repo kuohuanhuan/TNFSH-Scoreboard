@@ -1,0 +1,49 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, empty with context %}
+{% from "partials/icons.html" import icon %}
+{% block title %}表單下載{% endblock %}
+{% block content %}
+{{ page_header("表單下載", "由校務系統產生 PDF 檔。") }}
+
+<div class="alert alert-warning" role="note">若要正式使用，列印後請到教務處請學校蓋上關防。</div>
+
+{% if not semesters %}
+    {{ empty("目前沒有任何學期資料。") }}
+{% else %}
+{# 下載是一般的表單送出（不經 HTMX），瀏覽器會直接下載檔案 #}
+<form action="{{ path_for('documents_download') }}" method="get" hx-boost="false">
+    <div class="mb-4 picker">
+        <label for="document-semester" class="form-label fw-semibold">學期</label>
+        <select id="document-semester" name="semester" class="form-select">
+            {% for semester in semesters %}
+            <option value="{{ semester.id }}">{{ semester.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <ul class="list-group">
+        {% for kind, label in documents.items() %}
+        <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
+            <div class="flex-grow-1">
+                <h2 class="h6 mb-1">{{ label }}</h2>
+                {% if kind == "grade_table" %}
+                <fieldset>
+                    <legend class="visually-hidden">報表類型</legend>
+                    {% for value, description in grade_table_kinds.items() %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="report_kind" id="report-kind-{{ value }}" value="{{ value }}"{% if loop.first %} checked{% endif %}>
+                        <label class="form-check-label small" for="report-kind-{{ value }}">{{ description }}</label>
+                    </div>
+                    {% endfor %}
+                </fieldset>
+                {% endif %}
+            </div>
+            <button type="submit" name="kind" value="{{ kind }}" class="btn btn-outline-primary d-flex align-items-center gap-1">
+                {{ icon("download", 18) }}下載<span class="visually-hidden">{{ label }}</span>
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
+</form>
+{% endif %}
+{% endblock %}

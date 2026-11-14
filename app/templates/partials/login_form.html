@@ -1,0 +1,46 @@
+{% from "partials/icons.html" import icon %}
+{% from "partials/macros.html" import alert with context %}
+<form id="login-form" action="{{ path_for('login_submit') }}" method="post"
+      hx-post="{{ path_for('login_submit') }}" hx-target="this" hx-swap="outerHTML"
+      hx-disabled-elt="find button[type=submit]" x-data="{ showPassword: false }">
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    {% if error %}{{ alert(error) }}{% endif %}
+
+    <div class="mb-3">
+        <label for="username" class="form-label">帳號</label>
+        <input id="username" name="username" class="form-control" value="{{ username }}" required
+               autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false"
+               {% if not username %}autofocus{% endif %}>
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">密碼</label>
+        <div class="input-group">
+            <input id="password" name="password" type="password" :type="showPassword ? 'text' : 'password'"
+                   class="form-control" required autocomplete="current-password" {% if username %}autofocus{% endif %}>
+            <button type="button" class="btn btn-outline-secondary" x-cloak @click="showPassword = !showPassword"
+                    aria-controls="password" :aria-pressed="showPassword.toString()" aria-label="顯示密碼">
+                <span x-show="!showPassword">{{ icon("eye") }}</span>
+                <span x-show="showPassword">{{ icon("eye_off") }}</span>
+            </button>
+        </div>
+        <div class="form-text"><a href="{{ path_for('forgot_password') }}">忘記密碼？</a></div>
+    </div>
+
+    <div id="captcha-slot" class="mb-4">
+        {% if manual %}
+            {% include "partials/captcha.html" %}
+        {% else %}
+            <p class="form-text mb-1">驗證碼會自動辨識。</p>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    hx-get="{{ path_for('login_captcha') }}" hx-target="#captcha-slot" hx-swap="innerHTML">
+                改為手動輸入驗證碼
+            </button>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">
+        <span class="spinner-border spinner-border-sm btn-spinner" aria-hidden="true"></span>
+        登入
+    </button>
+</form>

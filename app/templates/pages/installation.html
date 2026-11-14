@@ -1,0 +1,62 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header with context %}
+{% block title %}安裝到主畫面{% endblock %}
+{% block content %}
+{{ page_header("安裝到主畫面", "把網站加到主畫面，就能像 App 一樣直接開啟。") }}
+
+<div class="accordion" id="install-guide">
+    <section class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#install-android" aria-expanded="false" aria-controls="install-android">Android</button>
+        </h2>
+        <div id="install-android" class="accordion-collapse collapse" data-bs-parent="#install-guide">
+            <div class="accordion-body">
+                <h3 class="h5">Chrome</h3>
+                <ol>
+                    <li>
+                        點擊畫面右上角的選單
+                        <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/chrome-android-1.png') }}" alt="Chrome 右上角的選單按鈕" loading="lazy">
+                    </li>
+                    <li>
+                        在選單中選擇「安裝應用程式」
+                        <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/chrome-android-2.png') }}" alt="Chrome 選單中的安裝應用程式" loading="lazy">
+                    </li>
+                </ol>
+                <h3 class="h5">Edge</h3>
+                <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/edge-android-1.png') }}" alt="Edge 的選單按鈕" loading="lazy">
+                <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/edge-android-2.png') }}" alt="Edge 選單中的加入手機" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <section class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#install-ios" aria-expanded="false" aria-controls="install-ios">iPhone / iPad</button>
+        </h2>
+        <div id="install-ios" class="accordion-collapse collapse" data-bs-parent="#install-guide">
+            <div class="accordion-body">
+                <ol>
+                    <li>點選 Safari 畫面底部中間的分享按鈕開啟選單</li>
+                    <li>在選單中選擇「加入主畫面」</li>
+                </ol>
+                <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/iphone-safari.jpg') }}" alt="Safari 分享選單中的加入主畫面" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <section class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#install-desktop" aria-expanded="false" aria-controls="install-desktop">電腦版 Chrome</button>
+        </h2>
+        <div id="install-desktop" class="accordion-collapse collapse" data-bs-parent="#install-guide">
+            <div class="accordion-body">
+                <p>點擊網址列右方的「安裝」圖示。</p>
+                <img class="img-fluid d-block my-2 guide-img" src="{{ static('pictures/chrome-pc.png') }}" alt="Chrome 網址列右方的安裝圖示" loading="lazy">
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

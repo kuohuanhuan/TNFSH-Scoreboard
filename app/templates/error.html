@@ -1,0 +1,25 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="error-page text-center mx-auto py-5" aria-labelledby="error-title">
+    <h1 class="h3" id="error-title">{{ title }}</h1>
+    <p class="lead">{{ message }}</p>
+    <p class="d-flex flex-wrap justify-content-center gap-2">
+        <a class="btn btn-primary" href="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}" hx-boost="false">重新整理</a>
+        {% if student %}
+        <form action="{{ path_for('logout') }}" method="post" hx-boost="false">
+            <button type="submit" class="btn btn-outline-secondary">重新登入</button>
+        </form>
+        {% else %}
+        <a class="btn btn-outline-secondary" href="{{ path_for('login') }}">登入</a>
+        {% endif %}
+    </p>
+    {% if remote %}
+    <p class="text-body-secondary small mb-0">
+        問題持續發生的話，歡迎到
+        <a href="https://github.com/tobiichi3227/TNFSH-Scoreboard/issues" target="_blank" rel="noopener">GitHub Issues</a>
+        或 <a href="https://forms.gle/ffzsPJRoxDNU6PYeA" target="_blank" rel="noopener">Google 表單</a> 回報。
+    </p>
+    {% endif %}
+</section>
+{% endblock %}

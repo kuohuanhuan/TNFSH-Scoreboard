@@ -1,0 +1,72 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, semester_picker, stat, ranks, rank, empty with context %}
+{% block title %}學期成績{% if selected %} · {{ selected.label }}{% endif %}{% endblock %}
+{% block content %}
+{{ page_header("學期成績") }}
+{{ semester_picker("term", semesters, selected) }}
+
+{% if not selected %}
+    {{ empty("目前沒有任何學期資料。") }}
+{% else %}
+    <section aria-labelledby="term-summary-title" class="mb-4">
+        <h2 class="h5" id="term-summary-title">總覽</h2>
+        <dl class="stat-grid">
+            {{ stat("學業成績", summary.score | number(1) if summary and summary.score else none) }}
+            {{ stat("總分", summary.total_score if summary else none) }}
+            <div class="card card-body stat">
+                <dt>應得 / 實得 / 累計學分</dt>
+                <dd>{% if summary and summary.deserved_credits %}{{ summary.deserved_credits }} / {{ summary.earned_credits | or_dash("—") }} / {{ summary.accumulated_credits | or_dash("—") }}{% else %}<span class="text-body-secondary">尚未公布</span>{% endif %}</dd>
+            </div>
+            <div class="card card-body stat">
+                <dt>班排 / 組排 / 校排</dt>
+                <dd>{{ ranks(ranking.class_rank, ranking.group_rank, ranking.all_rank) }}</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section aria-labelledby="term-scores-title">
+        <h2 class="h5" id="term-scores-title">各科成績</h2>
+        {% if scores %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle score-table sticky-first-col">
+                <thead>
+                    <tr>
+                        <th scope="col">科目</th>
+                        <th scope="col">類別</th>
+                        <th scope="col" class="text-end">學分</th>
+                        <th scope="col" class="text-end">最終分數</th>
+                        <th scope="col" class="text-end">原始分數</th>
+                        {% if show_makeup %}<th scope="col" class="text-end">補考分數</th>{% endif %}
+                        {% if show_retake %}<th scope="col" class="text-end">重修分數</th>{% endif %}
+                        <th scope="col" class="text-end">班平均</th>
+                        <th scope="col" class="text-nowrap">班 / 組 / 校排</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in scores %}
+                    <tr>
+                        <th scope="row">{{ score.subject }}</th>
+                        <td>{{ score.course_type }}</td>
+                        <td class="text-end{% if score.credits_lost %} text-danger fw-semibold{% endif %}">
+                            {{ score.credits }}{% if score.credits_lost %}<span class="visually-hidden">（未取得）</span>{% endif %}
+                        </td>
+                        <td class="text-end fw-semibold{% if score.score_level %} text-{{ score.score_level }}{% endif %}">{{ rank(score.score) }}</td>
+                        <td class="text-end">{{ score.score_original | or_dash("—") }}</td>
+                        {% if show_makeup %}<td class="text-end">{{ score.score_makeup | or_dash("") }}</td>{% endif %}
+                        {% if show_retake %}<td class="text-end">{{ score.score_retake | or_dash("") }}</td>{% endif %}
+                        <td class="text-end">{{ score.class_average | or_dash("—") }}</td>
+                        <td class="text-nowrap">{{ ranks(score.class_rank, score.group_rank, score.all_rank) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-body-secondary">
+            <span class="text-danger">紅色學分</span>表示該科未取得學分；不及格的分數以<span class="text-warning">黃色（40–59）</span>與<span class="text-danger">紅色（39 以下）</span>標示。
+        </p>
+        {% else %}
+            {{ empty("這學期還沒有成績。") }}
+        {% endif %}
+    </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,13 @@
+{% from "partials/macros.html" import alert with context %}
+{% if error %}
+    {{ alert(error) }}
+{% elif failures %}
+<div class="alert alert-warning" role="alert">
+    {% if succeeded %}<p class="mb-2">已送出 {{ succeeded }} 個時段，以下時段失敗：</p>{% else %}<p class="mb-2">送出失敗：</p>{% endif %}
+    <ul class="mb-0">
+        {% for failure in failures %}<li>{{ failure }}</li>{% endfor %}
+    </ul>
+</div>
+{% else %}
+    {{ alert("假單已送出。", "success") }}
+{% endif %}

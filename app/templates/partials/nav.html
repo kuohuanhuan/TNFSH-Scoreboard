@@ -1,0 +1,67 @@
+{% from "partials/icons.html" import icon %}
+{% macro nav_link(name, label) -%}
+<li class="nav-item">
+    <a class="nav-link d-flex align-items-center gap-2{% if active == name %} active{% endif %}"
+       href="{{ path_for(name) }}"{% if active == name %} aria-current="page"{% endif %}>
+        {{ icon(name) }}<span>{{ label }}</span>
+    </a>
+</li>
+{%- endmacro %}
+
+<nav id="primary-nav" class="flex-grow-1 d-flex flex-column px-2 py-3 gap-3" aria-label="主選單">
+    {% if student %}
+    <section aria-labelledby="nav-scores">
+        <h2 class="sidebar-heading" id="nav-scores">成績</h2>
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("exam", "段考成績") }}
+            {{ nav_link("term", "學期成績") }}
+            {% if student.is_senior %}{{ nav_link("graduation", "畢業學分") }}{% endif %}
+        </ul>
+    </section>
+    <section aria-labelledby="nav-attendance">
+        <h2 class="sidebar-heading" id="nav-attendance">出缺勤與獎懲</h2>
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("absence", "缺曠課紀錄") }}
+            {{ nav_link("subject_absence", "各科缺席數") }}
+            {{ nav_link("reward", "獎懲紀錄") }}
+            {{ nav_link("leave", "線上請假") }}
+        </ul>
+    </section>
+    <section aria-labelledby="nav-documents">
+        <h2 class="sidebar-heading" id="nav-documents">文件</h2>
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("documents", "表單下載") }}
+        </ul>
+    </section>
+    {% endif %}
+    <section aria-labelledby="nav-others">
+        <h2 class="sidebar-heading" id="nav-others">其他</h2>
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("installation", "安裝到主畫面") }}
+            {{ nav_link("about", "關於") }}
+        </ul>
+    </section>
+
+    <section class="mt-auto border-top pt-3" aria-labelledby="nav-account">
+        <h2 class="visually-hidden" id="nav-account">帳號</h2>
+        {% if student %}
+        <p class="d-flex align-items-center gap-2 px-3 mb-2 fw-semibold">
+            {{ icon("user") }}<span>{{ student.display_name }}</span>
+        </p>
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("change_password", "修改密碼") }}
+            <li class="nav-item">
+                <form action="{{ path_for('logout') }}" method="post" hx-boost="false">
+                    <button type="submit" class="nav-link d-flex align-items-center gap-2 w-100 text-start">
+                        {{ icon("logout") }}<span>登出</span>
+                    </button>
+                </form>
+            </li>
+        </ul>
+        {% else %}
+        <ul class="nav nav-pills flex-column">
+            {{ nav_link("login", "登入") }}
+        </ul>
+        {% endif %}
+    </section>
+</nav>

@@ -1,0 +1,11 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% block title %}登入{% endblock %}
+{% block content %}
+<section class="auth-card card shadow-sm mx-auto my-lg-5" aria-labelledby="login-title">
+    <div class="card-body p-4">
+        <h1 class="h3 text-center mb-1" id="login-title">登入</h1>
+        <p class="text-body-secondary text-center mb-4">帳號密碼與學校校務系統相同</p>
+        {% include "partials/login_form.html" %}
+    </div>
+</section>
+{% endblock %}

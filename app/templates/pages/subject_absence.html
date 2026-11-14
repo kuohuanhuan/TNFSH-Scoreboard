@@ -1,0 +1,32 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, empty with context %}
+{% block title %}各科缺席數{% endblock %}
+{% block content %}
+{{ page_header("各科缺席數", "依班級課表統計本學期各科的曠課與事假節數。" ~ ((" " ~ semester.label) if semester else "")) }}
+
+{% if not student.has_class %}
+    {{ empty("找不到你的班級座號，無法計算出席數。") }}
+{% elif not counts %}
+    {{ empty("本學期沒有任何曠課或事假。") }}
+{% else %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle w-auto">
+        <thead>
+            <tr>
+                <th scope="col">科目</th>
+                <th scope="col" class="text-end">缺席節數</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subject, count in counts %}
+            <tr>
+                <th scope="row">{{ subject }}</th>
+                <td class="text-end">{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="small text-body-secondary">課表來自教務處網站；調課、代課不會反映在統計中。</p>
+{% endif %}
+{% endblock %}

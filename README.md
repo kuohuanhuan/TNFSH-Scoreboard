@@ -1,100 +1,85 @@
 # TNFSH Scoreboard
 
 ## About
-學校的成績系統界面對手機使用者不太友善，需要多次點擊與頁面縮放，因此這個項目就誕生了
+學校的成績系統界面對手機使用者不太友善，需要多次點擊與頁面縮放，因此這個項目就誕生了。
+
+功能：段考成績、學期成績、畢業學分試算、缺曠課紀錄、各科缺席數、獎懲紀錄、線上請假、表單（PDF）下載、修改密碼與忘記密碼。
 
 ## Project Structure
-基本上是參考 [TOJ](https://github.com/Tfcis/NTOJ) 的架構
 
-| Codebase                   |         Description          |
-|:---------------------------|:----------------------------:|
-| [Api](src/services/api.py) | API Client for school system |
-| [Backend](src/)            |       Tornado backend        |
-| [Frontend](src/static/)    |     Bootstrap5 frontend      |
+| 路徑                                          | 說明                                                       |
+|:----------------------------------------------|:-----------------------------------------------------------|
+| [`app/main.py`](app/main.py)                  | FastAPI 應用程式、錯誤處理、`BASE_URL` 子路徑掛載            |
+| [`app/config.py`](app/config.py)              | 設定（環境變數 / `.env`）                                   |
+| [`app/school/client.py`](app/school/client.py) | 校務系統的非同步 API client（aiohttp）                      |
+| [`app/school/models.py`](app/school/models.py) | 校務系統資料的型別                                          |
+| [`app/services.py`](app/services.py)          | 純商業邏輯：統計、各科缺席數、畢業學分                        |
+| [`app/routers/`](app/routers)                 | 各頁面的路由                                               |
+| [`app/templates/`](app/templates)             | Jinja2 模板（Bootstrap 5 + HTMX + Alpine.js）               |
+| [`app/static/`](app/static)                   | CSS、JS、圖示，以及 vendored 的 Bootstrap / HTMX / Alpine.js |
+| [`tests/`](tests)                             | pytest 測試（以假的校務系統執行）                            |
 
-## Contribute
-先到Issues提Bug或Feature，之後在PR上指向之前發的Issue
+### 前端架構
+
+- **伺服器渲染**：每個頁面都是完整的 HTML，不需要 JavaScript 也能瀏覽與查詢。
+- **HTMX**：`<body hx-boost>` 讓站內連結與表單只替換 `<main>`；伺服器看到 `HX-Target: main` 時只回傳頁面內容（`layouts/partial.html`），否則回傳完整頁面。
+  登入、修改密碼等表單以 `hx-post` 局部更新；背景請求的錯誤會以 toast 顯示。
+- **Alpine.js**：只負責純前端的互動，例如顯示密碼、線上請假的多時段表單。
+- **Bootstrap 5**：語意化的 HTML（`<nav>`、`<main>`、`<dl>`、`<fieldset>`、`<th scope>`⋯），側邊欄在手機上是 offcanvas，並依系統設定自動切換深色模式。
 
 ## Prerequisites
 
-Before you begin, make sure you have the following installed:
-- Python (version 3.11 or higher)
-- Poetry (recommended)
-- or pip
+- Python 3.11 以上
 
 ## Installation
 
-### Using Poetry (recommended)
+```shell
+git clone https://github.com/tobiichi3227/TNFSH-Scoreboard.git
+cd TNFSH-Scoreboard
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-1. Clone the repository:
-    ```shell
-    git clone https://github.com/tobiichi3227/TNFSH-Scoreboard.git
-    cd TNFSH-Scoreboard
-    ```
-2. Install dependencies:
-    ```shell
-    poetry install
-    ```
-3. Activate the virtual environment:
-    ```shell
-    poetry env activate
-    poetry shell
-    ```
-
-### Using pip
-
-1. Clone the repository:
-    ```shell
-    git clone https://github.com/tobiichi3227/TNFSH-Scoreboard.git
-    cd TNFSH-Scoreboard
-    ```
-2. Create and activate a virtual environment:
-    ```shell
-    python -m venv venv
-    source venv/bin/activate # On Windows use `venv\Scripts\activate`
-    ```
-3. Install dependencies:
-    ```shell
-    pip install -r requirements.txt
-    ```
+`ddddocr` 用來自動辨識登入驗證碼，是選用的；沒有安裝時，使用者需要手動輸入驗證碼。
+也可以使用 `pip install -e ".[ocr]"`。
 
 ## Usage
-Run server
 
+```shell
+cp .env.example .env   # 修改 SCOREBOARD_SECRET_KEY
+python -m app
 ```
-cd src
-python server.py
+
+或直接使用 uvicorn（例如多個 worker 時）：
+
+```shell
+uvicorn app.main:app --host 0.0.0.0 --port 5227 --proxy-headers
 ```
+
+> 多個 worker 或重新啟動後仍要保持登入狀態，必須設定固定的 `SCOREBOARD_SECRET_KEY`。
 
 ## Configuration
 
-To configure the application, update the `config.py` file in the `src/config` directory. Key parameters include:
-```
-MAIN_URL = 'https://hschool-mlife.k12ea.gov.tw/ecampus_KH'
-SCHNO = '210305D'
-PORT = 5227
-SECRET_COOKIE = 'tobiichi3227orzorz'
-BASE_URL = '/'
-```
+所有設定都可以用 `SCOREBOARD_` 開頭的環境變數或 `.env` 檔覆寫：
 
-- `MAIN_URL`: 校務系統的網址
-- `SCHNO`: 校務系統網址中的學校ID
-    `https://epf.mlife.com.tw/ecampus_KH/Login.action?schNo=210305D`，這邊的 `schNo=210305D` 即是
-- `PORT`: 服務使用的端口
-- `SECRET_COOKIE`: 服務用於加密 cookie 的(建議長度大於32位的隨機字串)
-- `BASE_URL`: 服務網址，如果使用如 `/board` 之類的，要搭配 `nginx` 等 Reserve Proxy Server
+| 變數                          | 預設值                                            | 說明                                     |
+|:------------------------------|:--------------------------------------------------|:-----------------------------------------|
+| `SCOREBOARD_MAIN_URL`         | `https://hschool-mlife.k12ea.gov.tw/ecampus_KH`   | 校務系統的網址                            |
+| `SCOREBOARD_SCHOOL_NO`        | `210305D`                                         | 學校代碼                                  |
+| `SCOREBOARD_SECRET_KEY`       | 每次啟動隨機產生                                    | 簽署 session cookie 的密鑰                |
+| `SCOREBOARD_BASE_URL`         | `/`                                               | 網站掛載的子路徑，例如 `/scoreboard`        |
+| `SCOREBOARD_HOST` / `PORT`    | `0.0.0.0` / `5227`                                | `python -m app` 監聽的位址                 |
+| `SCOREBOARD_SECURE_COOKIES`   | `false`                                           | 透過 HTTPS 提供服務時設為 `true`           |
+| `SCOREBOARD_SESSION_MAX_AGE`  | `1800`                                            | 閒置多久（秒）後登出                       |
+| `SCOREBOARD_DEBUG`            | `false`                                           | 開發模式（自動重新載入）                    |
 
-### Nginx Configuration
-```nginx
-location /board/ {
-    rewrite ^/board/(.*) /$1 break;
-    proxy_pass http://localhost:PORT;
-    proxy_read_timeout 14400s;
-    proxy_http_version 1.1;
-}
+## Development
+
+```shell
+pip install -e ".[dev]"
+pytest
 ```
 
-## License
-
-This project is licensed under the GNU General Public License v2.0 (GPL-2.0).
-See the [LICENSE](./LICENSE) for more information.
+## Contribute
+先到 Issues 提 Bug 或 Feature，之後在 PR 上指向之前發的 Issue。

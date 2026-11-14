@@ -1,0 +1,45 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, empty with context %}
+{% block title %}畢業學分{% endblock %}
+{% block content %}
+{{ page_header("畢業學分", "依校務系統的學期成績計算，僅供參考，實際以教務處認定為準。") }}
+
+{% if not requirements %}
+    {{ empty("無法計算畢業學分，校務系統沒有提供資料。") }}
+{% else %}
+<div class="table-responsive mb-3">
+    <table class="table align-middle">
+        <caption class="caption-top">
+            本學期修習：部定必修 {{ current.national_required }} 學分、校訂必修 {{ current.school_required }} 學分、選修 {{ current.elective }} 學分
+        </caption>
+        <thead>
+            <tr>
+                <th scope="col">項目</th>
+                <th scope="col" class="text-end">已取得</th>
+                <th scope="col" class="text-end">本學期修習</th>
+                <th scope="col" class="text-end">最低學分</th>
+                <th scope="col">狀態</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in requirements %}
+            <tr>
+                <th scope="row">{{ row.label }}</th>
+                <td class="text-end fw-semibold">{{ row.earned }}</td>
+                <td class="text-end">{{ row.in_progress }}</td>
+                <td class="text-end">{{ row.minimum }}</td>
+                <td>
+                    {% if row.status == "ok" %}<span class="badge text-bg-success">已達標</span>
+                    {% elif row.status == "warning" %}<span class="badge text-bg-warning">本學期可修完</span>
+                    {% else %}<span class="badge text-bg-danger">本學期無法修完</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p class="small text-body-secondary">
+    「本學期無法修完」可能是前幾個學期學分不足，或本學期某些科目缺席超過三分之一。
+</p>
+{% endif %}
+{% endblock %}

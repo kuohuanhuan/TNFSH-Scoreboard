@@ -1,0 +1,116 @@
+[x-cloak] { display: none !important; }
+
+.icon { flex-shrink: 0; vertical-align: -0.2em; }
+
+/* ---------------------------------------------------------------- layout */
+
+@media (min-width: 992px) {
+    .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    padding: 0 1rem;
+    margin-bottom: .25rem;
+}
+
+.sidebar .nav-link { color: var(--bs-body-color); border: 0; background: none; }
+.sidebar .nav-link:hover { background-color: var(--bs-secondary-bg); }
+.sidebar .nav-link.active { color: #fff; background-color: var(--bs-primary); }
+
+#main { min-height: 100vh; outline: none; }
+@media (max-width: 991.98px) { #main { min-height: calc(100vh - 57px); } }
+
+.picker { max-width: 28rem; }
+.auth-card { max-width: 26rem; }
+.error-page { max-width: 36rem; }
+.prose { max-width: 42rem; }
+.guide-img { max-height: 28rem; border-radius: var(--bs-border-radius); border: 1px solid var(--bs-border-color); }
+
+/* ---------------------------------------------------------------- page loading bar */
+
+.page-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    height: 3px;
+    width: 0;
+    background-color: var(--bs-primary);
+    opacity: 0;
+    pointer-events: none;
+}
+.is-navigating .page-progress {
+    opacity: 1;
+    width: 85%;
+    transition: width 8s cubic-bezier(.1, .7, .2, 1), opacity .2s;
+}
+.is-navigating #main { opacity: .6; transition: opacity .2s .15s; }
+
+/* 按鈕送出中的轉圈圈：htmx 在發出請求的元素加上 .htmx-request */
+.btn-spinner { display: none; }
+.htmx-request .btn-spinner { display: inline-block; }
+
+/* ---------------------------------------------------------------- data */
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: .5rem;
+    margin: 0;
+}
+.stat-grid-sm { grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); }
+.stat { padding: .6rem .9rem; }
+.stat dt { font-size: .8rem; font-weight: 400; color: var(--bs-secondary-color); }
+.stat dd { font-size: 1.35rem; font-weight: 600; margin: 0; font-variant-numeric: tabular-nums; }
+.stat-grid-sm .stat dd { font-size: 1.15rem; }
+
+.score-table td, .absence-table td { font-variant-numeric: tabular-nums; }
+.score-table tbody th { white-space: nowrap; }
+
+/* 寬表格水平捲動時固定第一欄 */
+.sticky-first-col :is(th, td):first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: var(--bs-body-bg);
+    box-shadow: inset -1px 0 0 var(--bs-border-color);
+}
+
+.absence-table { font-size: .875rem; }
+.absence-table thead th { white-space: nowrap; font-weight: 500; }
+.absence-table td { min-width: 2rem; padding-inline: .2rem; }
+.absence-table td:not(:empty) { font-weight: 600; }
+.absence-table td.absence-1 { color: var(--bs-danger-text-emphasis); background-color: var(--bs-danger-bg-subtle); }
+.absence-table td.absence-7,
+.absence-table td.absence-E { color: var(--bs-warning-text-emphasis); background-color: var(--bs-warning-bg-subtle); }
+.absence-table td:is(.absence-2, .absence-3, .absence-4, .absence-5) { color: var(--bs-info-text-emphasis); background-color: var(--bs-info-bg-subtle); }
+
+.empty-state {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+}
+
+/* ---------------------------------------------------------------- leave */
+
+.leave-card { transition: opacity .2s; }
+.leave-card.htmx-swapping { opacity: 0; }
+.leave-card details > summary { cursor: pointer; color: var(--bs-link-color); }
+.leave-status-Y { background-color: var(--bs-success); }
+.leave-status-1, .leave-status-R { background-color: var(--bs-primary); }
+.leave-status-N, .leave-status-B { background-color: var(--bs-danger); }
+.leave-status-0, .leave-status-unknown { background-color: var(--bs-secondary); }
+.choice { min-width: 2.75rem; }
+
+.captcha-button img { display: block; height: 32px; width: auto; }

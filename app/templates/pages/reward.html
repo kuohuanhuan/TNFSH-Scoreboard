@@ -1,0 +1,50 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, semester_picker, stat, empty with context %}
+{% block title %}獎懲紀錄{% if selected %} · {{ selected.label }}{% endif %}{% endblock %}
+{% block content %}
+{{ page_header("獎懲紀錄") }}
+{{ semester_picker("reward", semesters, selected) }}
+
+{% if not records %}
+    {{ empty("這學期沒有任何獎懲紀錄。") }}
+{% else %}
+    <section aria-labelledby="reward-summary-title" class="mb-4">
+        <h2 class="h5" id="reward-summary-title">統計<small class="text-body-secondary fw-normal fs-6">（不含已註銷）</small></h2>
+        <dl class="stat-grid stat-grid-sm">
+            {% for name in REWARD_NAMES %}
+            {{ stat(name, totals[loop.index0] ~ " 支") }}
+            {% endfor %}
+        </dl>
+    </section>
+
+    <section aria-labelledby="reward-list-title">
+        <h2 class="h5" id="reward-list-title">明細</h2>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">獎懲事實</th>
+                        <th scope="col">獎懲事項</th>
+                        <th scope="col" class="text-nowrap">獎懲</th>
+                        <th scope="col" class="text-nowrap">註銷</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr{% if record.cancelled %} class="text-body-secondary"{% endif %}>
+                        <td>{{ record.fact }}</td>
+                        <td>{{ record.description | or_dash("—") }}</td>
+                        <td class="text-nowrap">{{ record.summary | or_dash("—") }}</td>
+                        <td class="text-nowrap">
+                            {% if record.cancelled %}已註銷{% if record.cancel_date %}<br><small>{{ record.cancel_date }}</small>{% endif %}
+                            {% elif record.cancelled is sameas false %}否
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header with context %}
+{% block title %}關於{% endblock %}
+{% block content %}
+{{ page_header("關於") }}
+<article class="prose">
+    <p>一個簡單的成績查詢系統。</p>
+    <p>學校校務系統的介面對手機不太友善，要點很多次、縮放很多次才看得到成績，所以這個專案就誕生了。</p>
+    <p>本網站不會儲存你的帳號、密碼或成績：登入後只會在瀏覽器的 cookie 中保存校務系統的連線金鑰，閒置 30 分鐘即失效。</p>
+    <p>
+        原始碼：<a href="https://github.com/tobiichi3227/TNFSH-Scoreboard" target="_blank" rel="noopener">GitHub</a>。
+        遇到問題歡迎到 <a href="https://github.com/tobiichi3227/TNFSH-Scoreboard/issues" target="_blank" rel="noopener">Issues</a>
+        或 <a href="https://forms.gle/ffzsPJRoxDNU6PYeA" target="_blank" rel="noopener">Google 表單</a> 回報。
+    </p>
+    <p class="text-body-secondary small">Developed by tobiichi3227 · v{{ app_version }}</p>
+</article>
+{% endblock %}

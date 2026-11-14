@@ -1,0 +1,45 @@
+{% macro page_header(title, lead=None) -%}
+<header class="mb-4">
+    <h1 class="h3 mb-1">{{ title }}</h1>
+    {% if lead %}<p class="text-body-secondary mb-0">{{ lead }}</p>{% endif %}
+</header>
+{%- endmacro %}
+
+{# 切換學期：無 JavaScript 時是一般 GET 表單，有 HTMX 時選了就更新 #}
+{% macro semester_picker(route, semesters, selected) -%}
+<form class="picker mb-4" action="{{ path_for(route) }}" method="get"
+      hx-get="{{ path_for(route) }}" hx-trigger="change" hx-target="#main" hx-push-url="true">
+    <label for="semester-select" class="form-label fw-semibold">學期</label>
+    <div class="input-group">
+        <select id="semester-select" name="semester" class="form-select">
+            {% for semester in semesters %}
+            <option value="{{ semester.id }}"{% if selected and semester.id == selected.id %} selected{% endif %}>{{ semester.label }}</option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit" class="btn btn-primary">查詢</button></noscript>
+    </div>
+</form>
+{%- endmacro %}
+
+{% macro stat(label, value, hint=None) -%}
+<div class="card card-body stat">
+    <dt>{{ label }}</dt>
+    <dd{% if value is none or value == "" %} class="text-body-secondary"{% endif %}>{{ value | or_dash }}{% if hint and value is not none and value != "" %}<small class="text-body-secondary"> {{ hint }}</small>{% endif %}</dd>
+</div>
+{%- endmacro %}
+
+{% macro rank(value, count=None) -%}
+{% if value is none %}<span class="text-body-secondary">尚未公布</span>{% elif count %}{{ value }} / {{ count }}{% else %}{{ value }}{% endif %}
+{%- endmacro %}
+
+{% macro ranks() -%}
+{% if varargs[0] is none %}<span class="text-body-secondary">尚未公布</span>{% else %}{{ varargs | map("or_dash", "—") | join(" / ") }}{% endif %}
+{%- endmacro %}
+
+{% macro empty(message) -%}
+<p class="empty-state text-body-secondary">{{ message }}</p>
+{%- endmacro %}
+
+{% macro alert(message, level="danger") -%}
+<div class="alert alert-{{ level }}" role="{{ 'alert' if level in ('danger', 'warning') else 'status' }}">{{ message }}</div>
+{%- endmacro %}

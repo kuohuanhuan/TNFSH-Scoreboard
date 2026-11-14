@@ -1,0 +1,22 @@
+{% from "partials/icons.html" import icon %}
+<label for="captcha" class="form-label">驗證碼</label>
+{% if captcha %}
+<div class="input-group">
+    <input id="captcha" name="captcha" class="form-control" required minlength="4" maxlength="4"
+           autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button type="button" class="btn btn-outline-secondary py-0 px-1 captcha-button"
+            hx-get="{{ path_for('login_captcha') }}" hx-target="#captcha-slot" hx-swap="innerHTML"
+            aria-label="驗證碼圖片，按一下換一張" title="換一張">
+        <img src="{{ captcha }}" alt="" width="96" height="32">
+    </button>
+</div>
+<div class="form-text">看不清楚？按一下圖片換一張。</div>
+{% else %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between gap-2 mb-0" role="alert">
+    <span>{{ captcha_error or "無法取得驗證碼" }}</span>
+    <button type="button" class="btn btn-sm btn-outline-secondary"
+            hx-get="{{ path_for('login_captcha') }}" hx-target="#captcha-slot" hx-swap="innerHTML">
+        {{ icon("refresh", 16) }} 重試
+    </button>
+</div>
+{% endif %}

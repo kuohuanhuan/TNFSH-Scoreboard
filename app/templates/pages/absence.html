@@ -1,0 +1,47 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, semester_picker, stat, empty with context %}
+{% block title %}缺曠課紀錄{% if selected %} · {{ selected.label }}{% endif %}{% endblock %}
+{% block content %}
+{{ page_header("缺曠課紀錄") }}
+{{ semester_picker("absence", semesters, selected) }}
+
+{% if not records %}
+    {{ empty("這學期沒有任何缺曠課紀錄。") }}
+{% else %}
+    <section aria-labelledby="absence-summary-title" class="mb-4">
+        <h2 class="h5" id="absence-summary-title">統計（節數）</h2>
+        <dl class="stat-grid stat-grid-sm">
+            {% for code, count in totals.items() %}
+            {{ stat(codes.absence_long(code), count) }}
+            {% endfor %}
+        </dl>
+    </section>
+
+    <section aria-labelledby="absence-list-title">
+        <h2 class="h5" id="absence-list-title">明細</h2>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered text-center align-middle absence-table sticky-first-col">
+                <thead>
+                    <tr>
+                        <th scope="col">日期</th>
+                        {% for period in PERIOD_NAMES %}<th scope="col">{{ period }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <th scope="row" class="text-nowrap">
+                            <time datetime="{{ record.day.isoformat() }}" title="{{ record.date }}">{{ record.date[4:] }}</time>
+                            <small class="text-body-secondary">（{{ record.weekday_name }}）</small>
+                        </th>
+                        {% for code in record.periods %}
+                        <td{% if code %} class="absence-{{ code }}" title="{{ codes.absence_long(code) }}"{% endif %}>{{ codes.absence_short(code) }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

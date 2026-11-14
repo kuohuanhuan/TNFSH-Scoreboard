@@ -1,0 +1,79 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, stat, rank, empty with context %}
+{% block title %}{{ selected.label if selected else "段考成績" }}{% endblock %}
+{% block content %}
+{{ page_header("段考成績") }}
+
+<form class="picker mb-4" action="{{ path_for('exam') }}" method="get"
+      hx-get="{{ path_for('exam') }}" hx-trigger="change" hx-target="#main" hx-push-url="true">
+    <label for="exam-select" class="form-label fw-semibold">考試</label>
+    <div class="input-group">
+        <select id="exam-select" name="exam" class="form-select" required>
+            <option value="" disabled{% if not selected %} selected{% endif %}>請選擇段考</option>
+            {% for semester, exams in exam_groups %}
+            <optgroup label="{{ semester.label }}">
+                {% for exam in exams %}
+                <option value="{{ exam.item_id }}"{% if selected and exam.item_id == selected.item_id %} selected{% endif %}>{{ exam.label }}</option>
+                {% endfor %}
+            </optgroup>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit" class="btn btn-primary">查詢</button></noscript>
+    </div>
+</form>
+
+{% if not selected %}
+    {{ empty("選擇一次段考來查看成績。" if exam_groups else "目前沒有任何段考。") }}
+{% else %}
+    {% set stats = result.stats %}
+    <section aria-labelledby="exam-summary-title" class="mb-4">
+        <h2 class="h5" id="exam-summary-title">總覽</h2>
+        <dl class="stat-grid">
+            {{ stat("總分", stats.score_sum | number if stats.score_sum else none) }}
+            {{ stat("平均", stats.average | number if stats.average else none) }}
+            {{ stat("班排", stats.class_rank, "/ " ~ stats.class_cnt if stats.class_cnt else none) }}
+            {{ stat("組排", stats.group_rank, "/ " ~ stats.group_cnt if stats.group_cnt else none) }}
+            {{ stat("校排", stats.all_rank, "/ " ~ stats.all_cnt if stats.all_cnt else none) }}
+        </dl>
+    </section>
+
+    <section aria-labelledby="exam-scores-title">
+        <h2 class="h5" id="exam-scores-title">各科成績</h2>
+        {% if result.scores %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle score-table">
+                <thead>
+                    <tr>
+                        <th scope="col">科目</th>
+                        <th scope="col" class="text-end">學分</th>
+                        <th scope="col" class="text-end">分數</th>
+                        <th scope="col" class="text-end">班排</th>
+                        <th scope="col" class="text-end">組排</th>
+                        <th scope="col" class="text-end">班平均</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for score in result.scores %}
+                    <tr>
+                        <th scope="row">{{ score.subject }}</th>
+                        <td class="text-end">{{ score.credits | or_dash("—") }}</td>
+                        <td class="text-end">
+                            {% if score.absent %}<span class="badge text-bg-secondary">缺考</span>
+                            {% elif score.score is none %}<span class="text-body-secondary">尚未公布</span>
+                            {% else %}<span class="{{ 'text-danger fw-semibold' if score.failed else 'fw-semibold' }}">{{ score.score }}</span>{% if score.failed %}<span class="visually-hidden">（不及格）</span>{% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="text-end">{{ rank(score.class_rank) }}</td>
+                        <td class="text-end">{{ rank(score.group_rank) }}</td>
+                        <td class="text-end">{{ rank(score.class_average) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {{ empty("這次段考還沒有成績。") }}
+        {% endif %}
+    </section>
+{% endif %}
+{% endblock %}

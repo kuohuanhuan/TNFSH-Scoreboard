@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="台南一中成績查詢系統：段考、學期成績、缺曠課、獎懲與線上請假">
+    <meta name="theme-color" content="#f8f9fa" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#212529" media="(prefers-color-scheme: dark)">
+    <meta name="htmx-config" content='{"historyCacheSize": 0, "scrollIntoViewOnBoost": false, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "[45]..", "swap": true, "error": true}]}'>
+    <title>{% block title %}{% endblock %} · TNFSH Scoreboard</title>
+
+    <link rel="icon" href="{{ static('favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ static('icons/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ path_for('manifest') }}">
+
+    <script>
+        // 依系統設定切換深色模式（在載入 CSS 前執行以避免閃爍）
+        (() => {
+            const media = window.matchMedia('(prefers-color-scheme: dark)');
+            const apply = () => document.documentElement.dataset.bsTheme = media.matches ? 'dark' : 'light';
+            apply();
+            media.addEventListener('change', apply);
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ static('vendor/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ static('css/app.css') }}">
+
+    <script defer src="{{ static('vendor/htmx.min.js') }}"></script>
+    <script defer src="{{ static('vendor/bootstrap.bundle.min.js') }}"></script>
+    <script defer src="{{ static('js/app.js') }}"></script>
+    <script defer src="{{ static('vendor/alpine.min.js') }}"></script>
+</head>
+<body hx-boost="true" hx-target="#main" hx-swap="innerHTML show:window:top">
+    <a class="visually-hidden-focusable position-absolute top-0 start-0 m-2 btn btn-primary" href="#main">跳到主要內容</a>
+    <div class="page-progress" aria-hidden="true"></div>
+
+    <header class="navbar bg-body-tertiary border-bottom sticky-top d-lg-none">
+        <div class="container-fluid">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar"
+                    aria-controls="sidebar" aria-label="開啟選單">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand me-auto ms-2" href="{{ path_for('home') }}">TNFSH Scoreboard</a>
+        </div>
+    </header>
+
+    <div class="container-fluid">
+        <div class="row">
+            <aside class="col-lg-3 col-xl-2 sidebar border-end bg-body-tertiary px-0">
+                <div class="offcanvas-lg offcanvas-start bg-body-tertiary" tabindex="-1" id="sidebar" aria-labelledby="sidebar-title">
+                    <div class="offcanvas-header border-bottom">
+                        <p class="offcanvas-title h5" id="sidebar-title">TNFSH Scoreboard</p>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="關閉選單"></button>
+                    </div>
+                    <div class="offcanvas-body d-flex flex-column p-0">
+                        <a class="d-none d-lg-flex align-items-center gap-2 px-3 py-3 border-bottom link-body-emphasis text-decoration-none" href="{{ path_for('home') }}">
+                            <img src="{{ static('icons/TNFSH-emblem.webp') }}" alt="" width="32" height="32">
+                            <span class="fs-5 fw-semibold">TNFSH Scoreboard</span>
+                        </a>
+                        {% include "partials/nav.html" %}
+                    </div>
+                </div>
+            </aside>
+
+            <main id="main" class="col-lg-9 col-xl-10 px-3 px-lg-4 py-3 py-lg-4" tabindex="-1" hx-history-elt>
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <div id="toasts" class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="false"></div>
+</body>
+</html>

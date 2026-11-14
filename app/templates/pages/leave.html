@@ -1,0 +1,181 @@
+{% extends "layouts/partial.html" if partial else "layouts/base.html" %}
+{% from "partials/macros.html" import page_header, semester_picker, empty with context %}
+{% from "partials/icons.html" import icon %}
+{% block title %}線上請假{% if selected %} · {{ selected.label }}{% endif %}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+    {{ page_header("線上請假") }}
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#leave-modal">
+        {{ icon("plus", 18) }}新增假單
+    </button>
+</div>
+{{ semester_picker("leave", semesters, selected) }}
+
+<section id="leave-list" aria-labelledby="leave-list-title"
+         {% if selected %}hx-get="{{ path_for('leave', _query={'semester': selected.id}) }}"{% endif %}
+         hx-trigger="leave-changed from:body" hx-select="#leave-list" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+    <h2 class="visually-hidden" id="leave-list-title">假單列表</h2>
+    {% for form in forms %}
+    {% set r = form.first %}
+    <article class="card mb-3 leave-card" aria-labelledby="leave-{{ form.leave_id }}-title">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                <div>
+                    <h3 class="h6 mb-1" id="leave-{{ form.leave_id }}-title">{{ r.reason | or_dash("（未填寫事由）") }}</h3>
+                    <p class="small text-body-secondary mb-0">申請日期 {{ r.request_date | or_dash("—") }} · 審核者 {{ r.reviewer | or_dash("無") }}</p>
+                </div>
+                <span class="badge align-self-start leave-status-{{ r.status or 'unknown' }}">{{ codes.leave_status(r.status) }}</span>
+            </div>
+            {% if r.reject_reason %}
+            <p class="alert alert-warning py-2 mb-2"><strong>退回事由：</strong>{{ r.reject_reason }}</p>
+            {% endif %}
+
+            <details class="mb-3">
+                <summary>請假時段（{{ form.days | length }} 天）</summary>
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm table-bordered text-center align-middle absence-table sticky-first-col mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">日期</th>
+                                {% for period in PERIOD_NAMES %}<th scope="col">{{ period }}</th>{% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in form.days %}
+                            <tr>
+                                <th scope="row" class="text-nowrap">
+                                    <time datetime="{{ day.day.isoformat() }}" title="{{ day.leave_date }}">{{ day.leave_date[4:] }}</time>
+                                    <small class="text-body-secondary">（{{ day.weekday_name }}）</small>
+                                </th>
+                                {% for code in day.periods %}
+                                <td{% if code %} class="table-warning" title="{{ codes.absence_long(code) }}"{% endif %}>{{ codes.absence_short(code) }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" hx-boost="false"
+                   href="{{ path_for('leave_attachment', leave_id=form.leave_id) }}">{{ icon("download", 16) }}下載證明文件</a>
+                <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1"
+                        hx-delete="{{ path_for('leave_delete', leave_id=form.leave_id) }}"
+                        hx-confirm="確定要刪除這張假單嗎？"
+                        hx-target="closest article" hx-swap="outerHTML" hx-disabled-elt="this">
+                    {{ icon("trash", 16) }}刪除假單
+                </button>
+            </div>
+        </div>
+    </article>
+    {% else %}
+        {{ empty("這學期沒有任何假單。") }}
+    {% endfor %}
+</section>
+
+{# ------------------------------------------------------------------ 新增假單 #}
+<div class="modal fade" id="leave-modal" tabindex="-1" aria-labelledby="leave-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
+        <form class="modal-content" x-data="leaveForm" x-ref="form"
+              hx-post="{{ path_for('leave_create') }}" hx-encoding="multipart/form-data"
+              hx-target="#leave-feedback" hx-swap="innerHTML" hx-disabled-elt="find button[type=submit]"
+              @leave-changed.window="$event.detail.close && close()">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="leave-modal-title">新增假單</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+            </div>
+
+            <div class="modal-body" x-ref="body">
+                <noscript><p class="alert alert-warning">新增假單需要啟用 JavaScript。</p></noscript>
+
+                <div class="mb-3">
+                    <label for="leave-reason" class="form-label">請假事由</label>
+                    <input id="leave-reason" name="reason" class="form-control" required maxlength="100">
+                </div>
+
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">請假類型</legend>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for value, label in codes.LEAVE_TYPES.items() %}
+                        <input type="radio" class="btn-check" name="leave_type" id="leave-type-{{ value }}" value="{{ value }}" required autocomplete="off">
+                        <label class="btn btn-outline-primary" for="leave-type-{{ value }}">{{ label }}</label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <div class="mb-3">
+                    <label for="leave-attachment" class="form-label">證明文件</label>
+                    <input id="leave-attachment" name="attachment" type="file" class="form-control" required
+                           accept="image/jpeg,image/png,image/gif,application/pdf" aria-describedby="leave-attachment-help">
+                    <div class="form-text" id="leave-attachment-help">JPEG、PNG、GIF 或 PDF，最大 5 MiB。</div>
+                </div>
+
+                <input type="hidden" name="periods" :value="payload">
+
+                <template x-for="(period, index) in periods" :key="period.id">
+                    <fieldset class="border rounded p-3 mb-3 leave-period">
+                        <legend class="float-none w-auto px-2 fs-6 mb-0" x-text="`第 ${index + 1} 個時段`"></legend>
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" :for="`period-${period.id}-start`">開始日期</label>
+                                <input type="date" class="form-control" :id="`period-${period.id}-start`" required
+                                       x-model="period.start" @change="if (!period.end || period.end < period.start) period.end = period.start">
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" :for="`period-${period.id}-end`">結束日期</label>
+                                <input type="date" class="form-control" :id="`period-${period.id}-end`" required
+                                       x-model="period.end" :min="period.start">
+                            </div>
+                        </div>
+
+                        <fieldset class="mb-3">
+                            <legend class="form-label fs-6">星期</legend>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for value, label in codes.LEAVE_WEEKDAYS.items() %}
+                                <input type="checkbox" class="btn-check" value="{{ value }}" autocomplete="off"
+                                       :id="`period-${period.id}-week-{{ value }}`" x-model="period.weekdays">
+                                <label class="btn btn-sm btn-outline-primary choice" :for="`period-${period.id}-week-{{ value }}`">{{ label }}</label>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="mb-3">
+                            <legend class="form-label fs-6 d-flex align-items-center gap-2">
+                                節次
+                                <button type="button" class="btn btn-link btn-sm p-0" @click="period.lessons = allLessons.slice()">全天</button>
+                                <button type="button" class="btn btn-link btn-sm p-0" @click="period.lessons = []">清除</button>
+                            </legend>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for value, label in codes.LEAVE_LESSONS.items() %}
+                                <input type="checkbox" class="btn-check" value="{{ value }}" autocomplete="off"
+                                       :id="`period-${period.id}-lesson-{{ value }}`" x-model="period.lessons">
+                                <label class="btn btn-sm btn-outline-primary choice" :for="`period-${period.id}-lesson-{{ value }}`">{{ label }}</label>
+                                {% endfor %}
+                            </div>
+                        </fieldset>
+
+                        <button type="button" class="btn btn-sm btn-outline-danger" @click="remove(index)" x-show="periods.length > 1">
+                            刪除這個時段
+                        </button>
+                    </fieldset>
+                </template>
+
+                <button type="button" class="btn btn-outline-primary d-flex align-items-center gap-1" @click="add()">
+                    {{ icon("plus", 18) }}再新增一個時段
+                </button>
+
+                <div id="leave-feedback" class="mt-3" aria-live="polite"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="submit" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm btn-spinner" aria-hidden="true"></span>
+                    送出假單
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
