@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.applications import Starlette
+from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import RedirectResponse, Response
@@ -15,6 +16,7 @@ from starlette.routing import Mount, Route
 from app.config import Settings, get_settings
 from app.errors import ErrorCode, LoginRequired, SchoolError
 from app.routers import auth, pages, records, scores
+from app.school import ocr
 from app.school.client import SchoolClient
 from app.templating import is_main_swap, path_for, render, templates
 
@@ -95,6 +97,8 @@ def create_app(settings: Settings | None = None, school: SchoolClient | None = N
         client = school or SchoolClient(settings)
         await client.start()
         app.state.school = client
+        # 先載入驗證碼辨識模型，避免第一位登入的使用者等待
+        await run_in_threadpool(ocr.available)
         try:
             yield
         finally:

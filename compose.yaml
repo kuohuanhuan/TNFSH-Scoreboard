@@ -1,0 +1,23 @@
+services:
+  scoreboard:
+    build:
+      context: .
+      args:
+        WITH_OCR: "true"
+    image: tnfsh-scoreboard
+    restart: unless-stopped
+    ports:
+      - "5227:5227"
+    environment:
+      # 正式環境請改成固定的隨機字串：python -c "import secrets; print(secrets.token_urlsafe(32))"
+      SCOREBOARD_SECRET_KEY: ${SCOREBOARD_SECRET_KEY:-}
+      SCOREBOARD_BASE_URL: ${SCOREBOARD_BASE_URL:-/}
+      SCOREBOARD_SECURE_COOKIES: ${SCOREBOARD_SECURE_COOKIES:-false}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-1}
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

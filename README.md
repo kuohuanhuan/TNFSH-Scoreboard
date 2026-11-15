@@ -38,10 +38,10 @@ git clone https://github.com/tobiichi3227/TNFSH-Scoreboard.git
 cd TNFSH-Scoreboard
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-ocr.txt
 ```
 
-`ddddocr` 用來自動辨識登入驗證碼，是選用的；沒有安裝時，使用者需要手動輸入驗證碼。
+`ddddocr` 用來自動辨識登入驗證碼，是選用的；不需要的話改裝 `requirements.txt`，使用者登入時需要手動輸入驗證碼。
 也可以使用 `pip install -e ".[ocr]"`。
 
 ## Usage
@@ -58,6 +58,28 @@ uvicorn app.main:app --host 0.0.0.0 --port 5227 --proxy-headers
 ```
 
 > 多個 worker 或重新啟動後仍要保持登入狀態，必須設定固定的 `SCOREBOARD_SECRET_KEY`。
+
+## Docker
+
+```shell
+# 產生固定的密鑰（只需一次），寫進 .env 讓 docker compose 讀取
+echo "SCOREBOARD_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" > .env
+docker compose up -d --build
+```
+
+網站會在 <http://localhost:5227>。`compose.yaml` 以唯讀檔案系統、非 root 使用者、移除所有 capabilities 執行，並內建健康檢查（`/healthz`）。
+
+不使用 compose 時：
+
+```shell
+docker build -t tnfsh-scoreboard .
+docker run -d -p 5227:5227 -e SCOREBOARD_SECRET_KEY=<固定的隨機字串> tnfsh-scoreboard
+```
+
+- **不含 OCR 的精簡映像檔**：`docker build --build-arg WITH_OCR=false -t tnfsh-scoreboard:slim .`
+  （約 280 MB，含 OCR 約 900 MB），使用者登入時需手動輸入驗證碼。
+- **多個 worker**：設定 `WEB_CONCURRENCY=4`。沒有設定 `SCOREBOARD_SECRET_KEY` 時，容器啟動時會產生一組讓所有 worker 共用的暫時密鑰，但重新啟動後所有人都要重新登入。
+- **反向代理**：容器預設信任 `X-Forwarded-*` 標頭（`FORWARDED_ALLOW_IPS=*`）。若服務掛在子路徑，設定 `SCOREBOARD_BASE_URL=/scoreboard`；透過 HTTPS 提供服務時設定 `SCOREBOARD_SECURE_COOKIES=true`。
 
 ## Configuration
 

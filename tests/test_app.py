@@ -210,6 +210,11 @@ def test_legacy_redirects(client):
     assert client.get("/exam/").status_code in (307, 308)
 
 
+def test_healthz(client):
+    r = client.get("/healthz")
+    assert r.status_code == 200 and r.text == "ok"
+
+
 def test_manifest(client):
     data = client.get("/manifest.webmanifest").json()
     assert data["start_url"] == "/"

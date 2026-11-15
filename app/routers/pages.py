@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 
 from app.auth import current_student
 from app.templating import path_for, render
@@ -11,6 +11,12 @@ router = APIRouter()
 async def home(request: Request):
     target = "exam" if current_student(request) else "login"
     return RedirectResponse(path_for(request, target), status_code=303)
+
+
+@router.get("/healthz", name="healthz", include_in_schema=False)
+async def healthz():
+    """Liveness probe for containers; does not contact the school system."""
+    return PlainTextResponse("ok", headers={"Cache-Control": "no-store"})
 
 
 @router.get("/about", name="about")

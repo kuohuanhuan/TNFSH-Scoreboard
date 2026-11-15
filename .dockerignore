@@ -1,0 +1,8 @@
+# 只把執行需要的檔案送進 build context
+*
+!app/
+!requirements.txt
+!requirements-ocr.txt
+!docker-entrypoint.sh
+**/__pycache__
+**/*.pyc
